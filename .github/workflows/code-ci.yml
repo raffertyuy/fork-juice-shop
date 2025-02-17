@@ -1,0 +1,49 @@
+name: "Code CI"
+on:
+  pull_request:
+    paths-ignore:
+      - '*.md'
+      - 'LICENSE'
+      - 'monitoring/grafana-dashboard.json'
+      - 'screenshots/**'
+  schedule:
+    - cron: '0 0 * * 0' # Runs weekly on Sunday at midnight
+  workflow_dispatch:
+
+env:
+  NODE_DEFAULT_VERSION: 20
+  ANGULAR_CLI_VERSION: 17
+
+jobs:
+  scan-build-test:
+    name: Scan, Build, and Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_DEFAULT_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          npm install -g @angular/cli@$ANGULAR_CLI_VERSION
+          npm install
+        
+      - name: Run Dependency Review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v3
+
+      - name: "Execute unit tests"
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          command: npm test
