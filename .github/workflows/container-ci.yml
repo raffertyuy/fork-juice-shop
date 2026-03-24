@@ -30,7 +30,7 @@ jobs:
         run: docker build -t juice-shop:${{ github.sha }} .
 
       - name: Manual Trivy Setup
-        uses: aquasecurity/setup-trivy@v0.2.0
+        uses: aquasecurity/setup-trivy@v0.2.6
         with:
           cache: true
           version: v0.57.1
